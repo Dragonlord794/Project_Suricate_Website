@@ -1,18 +1,5 @@
 import Stripe from 'stripe';
-const products={tee:{name:'Tiger Tee — sandbox',amount:2500},hoodie:{name:'Hawksbill Hoodie — sandbox',amount:4500}};
+const catalog={tiger:['Tiger Tee',2500],turtle:['Hawksbill Hoodie',4500],leopard:['Snow Leopard Tee',2500],axolotl:['Axolotl Tee',2500],whale:['Blue Whale Hoodie',4500],gorilla:['Gorilla Tee',2500]};
 export default async function handler(req,res){
- res.setHeader('Cache-Control','no-store');
- if(req.method!=='POST')return res.status(405).json({error:'POST required'});
- const key=process.env.STRIPE_SECRET_KEY;
- if(!key?.startsWith('sk_test_'))return res.status(503).json({error:'Rotated sandbox key required in server environment.'});
- try{
- const site=new URL(process.env.SITE_URL).origin;
- if(req.headers.origin!==site)return res.status(403).json({error:'Origin not allowed'});
- const body=typeof req.body==='string'?JSON.parse(req.body):req.body;
- const p=products[body?.product];
- if(!p||!['S','M','L','XL'].includes(body.size))return res.status(400).json({error:'Invalid product or size'});
- const stripe=new Stripe(key);
- const session=await stripe.checkout.sessions.create({mode:'payment',customer_creation:'always',line_items:[{quantity:1,price_data:{currency:'usd',unit_amount:p.amount,tax_behavior:'exclusive',product_data:{name:p.name+' / '+body.size,metadata:{size:body.size,environment:'sandbox'}}}}],shipping_address_collection:{allowed_countries:['US']},shipping_options:[{shipping_rate_data:{type:'fixed_amount',fixed_amount:{amount:500,currency:'usd'},display_name:'Sandbox shipping — no shipment',tax_behavior:'exclusive'}}],automatic_tax:{enabled:process.env.STRIPE_TAX_ENABLED==='true'},invoice_creation:{enabled:process.env.STRIPE_PAID_INVOICES_ENABLED==='true'},metadata:{environment:'sandbox',project:'suricate'},success_url:site+'/shop.html?returned=1',cancel_url:site+'/shop.html',custom_text:{submit:{message:'Sandbox only. No real order, donation or shipment.'}}});
- return res.status(200).json({url:session.url});
- }catch(e){console.error('Sandbox checkout failed:',e.type||e.name);return res.status(400).json({error:'Check sandbox server configuration and try again.'});}
-}
+res.setHeader('Cache-Control','no-store');if(req.method!=='POST')return res.status(405).json({error:'POST required'});const key=process.env.STRIPE_SECRET_KEY;if(!key?.startsWith('sk_test_'))return res.status(503).json({error:'Sandbox key is not configured'});
+try{const site=new URL(process.env.SITE_URL).origin;if(req.headers.origin!==site)return res.status(403).json({error:'Origin not permitted'});const body=typeof req.body==='string'?JSON.parse(req.body):req.body;const items=body?.items;if(!Array.isArray(items)||!items.length||items.length>20)throw Error('Invalid cart');let total=0;const seen=new Set();const line_items=items.map(i=>{if(!Object.hasOwn(catalog,i.id)||!['S','M','L','XL'].includes(i.size)||!Number.isInteger(i.quantity)||i.quantity<1||i.quantity>5)throw Error('Invalid item');const sku=i.id+'|'+i.size;if(seen.has(sku))throw Error('Duplicate variant');seen.add(sku);total+=i.quantity;const [name,amount]=catalog[i.id];return {quantity:i.quantity,price_data:{currency:'usd',unit_amount:amount,tax_behavior:'exclusive',product_data:{name:name+' / '+i.size+' — sandbox',metadata:{product_id:i.id,size:i.size}}}}});if(total>20)throw Error('Maximum 20 items');const stripe=new Stripe(key);const session=await stripe.checkout.sessions.create({mode:'payment',customer_creation:'always',line_items,shipping_address_collection:{allowed_countries:['US']},shipping_options:[{shipping_rate_data:{type:'fixed_amount',fixed_amount:{amount:500,currency:'usd'},display_name:'Sandbox shipping — no shipment',tax_behavior:'exclusive'}}],automatic_tax:{enabled:process.env.STRIPE_TAX_ENABLED==='true'},invoice_creation:{enabled:process.env.STRIPE_PAID_INVOICES_ENABLED==='true'},metadata:{environment:'sandbox',project:'suricate'},success_url:site+'/shop.html?returned=1',cancel_url:site+'/shop.html',custom_text:{submit:{message:'Test only. No real order, shipment or donation.'}}});res.status(200).json({url:session.url});}catch(e){console.error('Checkout failed:',e.type||e.name);res.status(400).json({error:'Checkout failed. Verify cart and sandbox configuration.'});}}
