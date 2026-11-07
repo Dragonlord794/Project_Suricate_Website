@@ -1,18 +1,29 @@
-const products=[{id:'tiger',name:'The Tiger Tee',animal:'SIBERIAN TIGER',type:'tee',color:'#e5e7d9',fabric:'#f4eedb',ink:'#bd6232',symbol:'虎',sub:'ON THE LOOKOUT'},{id:'turtle',name:'The Hawksbill Hoodie',animal:'HAWKSBILL SEA TURTLE',type:'hoodie',color:'#dce7e0',fabric:'#234e3e',ink:'#c8ed97',symbol:'≈',sub:'KEEP THE OCEAN WILD'},{id:'leopard',name:'The Snow Leopard Tee',animal:'SNOW LEOPARD',type:'tee',color:'#e7e3dc',fabric:'#3a3d36',ink:'#e3e4c9',symbol:'✳',sub:'LEAVE A WILD TRACE'},{id:'axolotl',name:'The Axolotl Tee',animal:'AXOLOTL',type:'tee',color:'#eee0df',fabric:'#f1d4d3',ink:'#934d65',symbol:'✴',sub:'A LITTLE DIFFERENT. WILDLY GOOD.'},{id:'whale',name:'The Blue Whale Hoodie',animal:'BLUE WHALE',type:'hoodie',color:'#dce3e9',fabric:'#344b61',ink:'#d9e7df',symbol:'〜',sub:'MAKE WAVES FOR WILDLIFE'},{id:'gorilla',name:'The Gorilla Tee',animal:'MOUNTAIN GORILLA',type:'tee',color:'#e0e3d6',fabric:'#b4bb99',ink:'#284535',symbol:'◉',sub:'STRONGER TOGETHER'}];
-let saved=[];try{const v=JSON.parse(localStorage.getItem('suricate-saved')||'[]');if(Array.isArray(v))saved=v.filter(id=>products.some(p=>p.id===id))}catch(e){}let filter='all';
-function illustration(p){const hoodie=p.type==='hoodie';return `<svg viewBox="0 0 300 320" role="img" aria-label="Illustrative ${p.name} concept"><path d="${hoodie?'M113 55 Q112 10 150 10 Q188 10 187 55 L211 63 258 111 228 153 210 138 215 295 85 295 90 138 72 153 42 111 89 63Z':'M113 43 Q150 65 187 43 L215 56 267 105 233 147 208 127 213 286 87 286 92 127 67 147 33 105 85 56Z'}" fill="${p.fabric}"/><path d="M113 43 Q150 80 187 43" fill="none" stroke="${p.ink}" stroke-opacity=".3" stroke-width="4"/>${hoodie?`<path d="M116 54 Q150 18 184 54 M125 68L122 106 M175 68L178 106 M110 244Q150 228 190 244L192 271 108 271Z" fill="none" stroke="${p.ink}" stroke-opacity=".35" stroke-width="2"/>`:''}<text x="150" y="112" fill="${p.ink}" font-family="Arial,sans-serif" font-size="12" font-weight="900" text-anchor="middle" letter-spacing="1.6">STAY WILD</text><circle cx="150" cy="165" r="39" fill="none" stroke="${p.ink}" stroke-width="1"/><text x="150" y="185" fill="${p.ink}" font-family="Georgia,serif" font-size="56" text-anchor="middle">${p.symbol}</text><text x="150" y="222" fill="${p.ink}" font-family="Arial,sans-serif" font-size="8" font-weight="700" text-anchor="middle" letter-spacing="1">${p.animal}</text><text x="150" y="236" fill="${p.ink}" font-family="Arial,sans-serif" font-size="5" text-anchor="middle" letter-spacing=".6">${p.sub}</text></svg>`}
-function render(){document.querySelector('#products').innerHTML=products.filter(p=>filter==='all'||p.type===filter).map(p=>`<article><div class="product-art" style="background:${p.color}"><span class="concept-label">DESIGN CONCEPT</span>${illustration(p)}<button class="save-button" data-save="${p.id}" aria-label="${saved.includes(p.id)?'Unsave':'Save'} ${p.name}" aria-pressed="${saved.includes(p.id)}">${saved.includes(p.id)?'✓':'+'}</button></div><div class="product-info"><div><h3>${p.name}</h3><p>${p.type==='tee'?'Graphic tee':'Graphic hoodie'} · Collection concept</p></div><span>Coming soon</span></div></article>`).join('');document.querySelector('#bag-count').textContent=saved.length;renderSaved()}
-function persist(){try{localStorage.setItem('suricate-saved',JSON.stringify(saved))}catch(e){notify('Browser storage unavailable. Favorites last for this visit only.')}}
-let timer;function notify(text){const el=document.querySelector('#toast');el.textContent=text;el.classList.add('show');clearTimeout(timer);timer=setTimeout(()=>el.classList.remove('show'),2800)}
-function renderSaved(){const list=products.filter(p=>saved.includes(p.id));document.querySelector('#saved-items').innerHTML=list.length?list.map(p=>`<div class="saved-row"><span>${p.name}</span><button data-remove="${p.id}">Remove</button></div>`).join(''):'<p>No concepts saved yet. Explore the collection and tap + to keep your favorites here.</p>';document.querySelector('#clear-bag').hidden=!list.length}
-document.querySelector('#products').addEventListener('click',e=>{const b=e.target.closest('[data-save]');if(!b)return;const id=b.dataset.save;const exists=saved.includes(id);saved=exists?saved.filter(x=>x!==id):[...saved,id];persist();render();notify(exists?'Concept removed from your list':'Concept saved — not an order or reservation')});
-document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>{filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>{x.classList.toggle('active',x===b);x.setAttribute('aria-pressed',String(x===b))});render()}));
-const dialog=document.querySelector('#bag');document.querySelector('[data-open-bag]').addEventListener('click',()=>dialog.showModal());document.querySelector('#close-bag').addEventListener('click',()=>dialog.close());dialog.addEventListener('click',e=>{if(e.target===dialog){const r=dialog.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close()}});document.querySelector('#saved-items').addEventListener('click',e=>{const b=e.target.closest('[data-remove]');if(b){saved=saved.filter(x=>x!==b.dataset.remove);persist();render()}});document.querySelector('#clear-bag').addEventListener('click',()=>{saved=[];persist();render()});const menu=document.querySelector('.menu-toggle');menu.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));document.querySelector('nav').classList.toggle('open',open)});document.querySelectorAll('nav a').forEach(a=>a.addEventListener('click',()=>{menu.setAttribute('aria-expanded','false');document.querySelector('nav').classList.remove('open')}));document.querySelector('#year').textContent=new Date().getFullYear();render();
-const sandboxUrl='https://projectsuricatewebsite-git-stripe-sandbox-project-suricate.vercel.app/shop.html';
-const checkoutPanel=document.createElement('aside');checkoutPanel.style.cssText='background:#e4e8da;padding:24px;border:1px solid #c8d1c4;border-radius:6px;margin:24px 0';
-const checkoutTitle=document.createElement('h3');checkoutTitle.textContent='Try our Stripe checkout';
-const checkoutNote=document.createElement('p');checkoutNote.style.cssText='font-size:13px;line-height:1.8';checkoutNote.textContent='Sandbox only: Tiger Tee ($25) and Hawksbill Hoodie ($45), plus $5 sample US shipping. No real charges, orders, shipments or donations. Use Stripe test card details only. Vercel sign-in may be required.';
-const checkoutLink=document.createElement('a');checkoutLink.href=sandboxUrl;checkoutLink.className='button dark';checkoutLink.textContent='Test checkout ↗';
-checkoutPanel.append(checkoutTitle,checkoutNote,checkoutLink);document.querySelector('#products').before(checkoutPanel);
-const collectionNote=document.querySelector('#collection .fine-print');collectionNote.textContent='Concept illustrations only — not final merchandise or product photography. Real sales are not open. Save your favorites locally, or use the separate sandbox checkout above to test two sample products. Saved favorites are not a shopping cart.';
-for(const detail of document.querySelectorAll('.faq details')){if(detail.querySelector('summary')?.textContent==='Can I buy something today?')detail.querySelector('p').textContent='Real purchases are not available yet. The collection includes a separate Stripe sandbox checkout for two sample products. Testing does not create a real order or shipment.';}
+const menu = document.querySelector('.menu-toggle');
+const navigation = document.querySelector('#navigation');
+
+if (menu && navigation) {
+  function closeMenu() {
+    menu.setAttribute('aria-expanded', 'false');
+    navigation.classList.remove('open');
+  }
+
+  menu.addEventListener('click', () => {
+    const open = menu.getAttribute('aria-expanded') !== 'true';
+    menu.setAttribute('aria-expanded', String(open));
+    navigation.classList.toggle('open', open);
+  });
+
+  navigation.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', closeMenu);
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && menu.getAttribute('aria-expanded') === 'true') {
+      closeMenu();
+      menu.focus();
+    }
+  });
+}
+
+const year = document.querySelector('#year');
+if (year) year.textContent = new Date().getFullYear();

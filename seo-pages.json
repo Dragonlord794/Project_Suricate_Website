@@ -1,5 +1,22 @@
 [
-  {"path":"index.html","url":"/","updated":"2026-11-05"},
-  {"path":"animals.html","url":"/animals","updated":"2026-11-05"},
-  {"path":"updates.html","url":"/updates","updated":"2026-11-05"}
+  {
+    "path": "index.html",
+    "url": "/",
+    "updated": "2026-11-06"
+  },
+  {
+    "path": "collection.html",
+    "url": "/collection",
+    "updated": "2026-11-06"
+  },
+  {
+    "path": "animals.html",
+    "url": "/animals",
+    "updated": "2026-11-06"
+  },
+  {
+    "path": "updates.html",
+    "url": "/updates",
+    "updated": "2026-11-06"
+  }
 ]
